@@ -2,35 +2,39 @@ package Project;
 
 import java.awt.*;
 import java.awt.event.*;
-import java.util.NoSuchElementException;
-import java.util.Scanner;
+import java.util.*;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.event.*;
 import javax.swing.filechooser.*;
 
-//import Project.MyComponent;
-import HB.Tree;
-import HB.Tree.Node;
+import org.json.simple.JSONObject;
+
+import Project.*;
+import Project.Tree.Node;
 
 public class MindMap extends JFrame {
-   private String[] itemTitle = {"새로 만들기","열기","저장","다른 이름으로 저장","닫기","적용","변경"};
-   private JPanel contentPane;
+   String[] itemTitle = {"새로 만들기","열기","저장","다른 이름으로 저장","닫기","적용","변경"};
+   JPanel contentPane;
    JMenuBar mb;
    JToolBar tb;
-   static JPanel TP = new JPanel();
+   JPanel TP = new JPanel();
    static JPanel MP = new JPanel();
-   static JPanel AP = new JPanel();
-   static JButton b1, b2, b3, b4, b5;
+   JPanel AP = new JPanel();
+   final JButton b1, b2, b3, b4, b5;
    static JTextArea ta;
-   JLabel label;
    JPanel p;
    JLabel l1, l2, l3, l4, l5, l6;
    static JTextField tf1, tf2, tf3, tf4, tf5, tf6;
    int x, y, w, h;
+   static int tabSize;
+   ArrayList<String> string = new ArrayList<String>();
+   final JLabel node = new JLabel();
    static Tree tree = new Tree();
    static Node selectedNode;
+
+   JSONObject jsonObj = new JSONObject();
    
    JSplitPane SplitPane1 = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, new JScrollPane(TP), new JScrollPane(MP));
     JSplitPane SplitPane2 = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, new JScrollPane(SplitPane1),new JScrollPane(AP));
@@ -43,35 +47,32 @@ public class MindMap extends JFrame {
         contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
         contentPane.setLayout(new BorderLayout(0, 0));
         setContentPane(contentPane);
-      setSize(800,500);
+      setSize(1300,750);
       setVisible(true);
       MenuBar();
       ToolBar();
       add(SplitPane2);
-      SplitPane1.setDividerLocation(180);
-       SplitPane2.setDividerLocation(600);
+      SplitPane1.setDividerLocation(280);
+       SplitPane2.setDividerLocation(1000);
        
        TP.setLayout(new BorderLayout());
        b1 = new JButton("Text Editor Pane");
        b1.setEnabled(false);
        TP.add(b1, BorderLayout.NORTH);
        
-       ta = new JTextArea(10,10);
+       ta = new JTextArea();
        TP.add(new JScrollPane(ta), BorderLayout.CENTER);
        
        b2 = new JButton("적용");
        b2.setBackground(Color.RED);
-       b2.addActionListener(new MakeTree());
        TP.add(b2, BorderLayout.SOUTH);
       
        MP.setLayout(new BorderLayout());
        b3 = new JButton("MindMap Pane");
        b3.setEnabled(false);
-       MP.setBackground(Color.BLACK);
        MP.add(b3, BorderLayout.NORTH);
+       MP.setBackground(Color.BLACK);
        
-       label = new JLabel("");
-       MP.add(label, BorderLayout.CENTER);
        
        AP.setLayout(new BorderLayout());
        b4 = new JButton("Attribute Pane");
@@ -109,27 +110,18 @@ public class MindMap extends JFrame {
       
        b5 = new JButton("변경");
        b5.setBackground(Color.RED);
-       b5.addActionListener(new Attribute());
        AP.add(b5, BorderLayout.SOUTH);
-       /*
-       b2.addActionListener(new ActionListener() {
-          public void actionPerformed(ActionEvent e) {
-             JButton b = (JButton)e.getSource();
-             //MyComponent component = new MyComponent(ta);
-             label.setText(ta.getText());
-              label.setLocation(1000,1000);
-              
-              x=label.getX();
-              y=label.getY();
-              
-              tf2.setText(""+x);
-              tf3.setText(""+y);
+       
+       b2.addActionListener(new MakeTree());
+       ta.addKeyListener(new KeyAdapter() { //탭키
+          public void keyPressed(KeyEvent e) {
+             if(e.getKeyCode() == 9) {
+                tabSize = ta.getTabSize();
+                tabSize = 4;
+                ta.setTabSize(tabSize);
+             }
           }
        });
-       */
-       
-       //contentPane.addMouseListener(new MyMouseListener());
-
    }
    
    private void ToolBar() {
@@ -144,6 +136,7 @@ public class MindMap extends JFrame {
       }
       contentPane.add(tb,BorderLayout.NORTH);
    }
+   
    private void MenuBar() {
       // TODO Auto-generated method stub
       mb = new JMenuBar();
@@ -159,6 +152,8 @@ public class MindMap extends JFrame {
         mb.add(screenMenu);
         setJMenuBar(mb);
    }
+   
+   
    public static void main(String[] args) {
       EventQueue.invokeLater(new Runnable() {
             public void run() {
@@ -194,39 +189,6 @@ class ToolActionListener implements ActionListener{
    }
 }
 
-class MyMouseListener implements MouseListener, MouseMotionListener {
-	int clickedLocationX, clickedLocationY;
-	
-    public void mousePressed(MouseEvent e) {
-    	clickedLocationX = e.getX();
-    	clickedLocationY = e.getY();
-    }
-    public void mouseClicked(MouseEvent e) {
-  	  Node node = (Node)e.getSource();
-  	  MindMap.selectedNode = node;
-  	  MindMap.tf1.setText(node.get());
-  	  MindMap.tf2.setText(String.valueOf(node.X));
-  	  MindMap.tf3.setText(String.valueOf(node.Y));
-  	  MindMap.tf4.setText(String.valueOf(node.W));
-  	  MindMap.tf5.setText(String.valueOf(node.H));
-  	  MindMap.tf6.setText(node.color.substring(2));
-    }
-    public void mouseEntered(MouseEvent e) {}
-    public void mouseExited(MouseEvent e) {}
-    public void mouseReleased(MouseEvent e) {}
-    public void mouseDragged(MouseEvent e) {
-    	Node node = (Node)e.getSource();
-    	int tempX = e.getX() - clickedLocationX;
-    	int tempY = e.getY() - clickedLocationY;
-    	clickedLocationX = e.getX();
-    	clickedLocationY = e.getY();
-    	node.X += tempX;
-    	node.Y += tempY;
-    	node.setLocation(node.X, node.Y);
-    }
-    public void mouseMoved(MouseEvent e) {}
-}
-
 class MenuActionListener implements ActionListener{
       public void actionPerformed(ActionEvent e) {
          String cmd = e.getActionCommand();
@@ -250,69 +212,98 @@ class MenuActionListener implements ActionListener{
      }
 }
 
-class MakeTree implements ActionListener { //JTextArea를 읽어 Tree를 만드는 버튼리스너
+class MakeTree implements ActionListener { 
+   public static Object temp;//JTextArea를 읽어 Tree를 만드는 버튼리스너
 
-	@Override
-	public void actionPerformed(ActionEvent e) {
-		MindMap.MP.removeAll();
-		MindMap.MP.setBackground(Color.BLACK);
-		MindMap.MP.add(MindMap.b3);
-		Scanner s = new Scanner(MindMap.ta.getText());
-		int level = 0;
-		Node temp = MindMap.tree.root; //tree의 root
-		
-		while(true) {
-			try {
-				String str = s.nextLine(); //한 줄을 읽고
-				int count = 0;
-				char c = str.charAt(count);
-				
-				while(c == '	') { //탭의 개수를 카운트
-					count++;
-					c = str.charAt(count);
-				}
-				if(count == level) { //위의 노드와 같은 레벨이면 add
-					temp = MindMap.tree.add(temp, str.trim());
-					temp.addMouseListener(new MyMouseListener());
-					MindMap.MP.add(temp);
-				}
-				else if(count > level) { //위의 노드보다 높은 레벨(자식)이면 addChild
-					temp = MindMap.tree.addChild(temp, str.trim());
-					temp.addMouseListener(new MyMouseListener());
-					MindMap.MP.add(temp);
-					level++;
-				}
-				else if(count < level) { //위의 노드보다 낮은 레벨이면 
-					while(count < level) { //현재 노드와 레벨이 같아질 때까지 올라가다가
-						temp = temp.parent;
-						level--;
-					}
-					temp = MindMap.tree.add(temp, str.trim()); //add
-					temp.addMouseListener(new MyMouseListener());
-					MindMap.MP.add(temp);
-				}
-			}
-			catch(NoSuchElementException ex) { //더이상 읽을 줄이 없으면 break
-				temp = MindMap.tree.root;
-				s.close();
-				break;
-			}
-		}
-	}
+      @Override
+      public void actionPerformed(ActionEvent e) {
+         Scanner s = new Scanner(MindMap.ta.getText());
+         int level = 0;
+         Node temp = MindMap.tree.root; //tree의 root
+         
+         while(true) {
+            try {
+               String str = s.nextLine(); //한 줄을 읽고
+               int count = 0;
+               char c = str.charAt(count);
+               
+               while(c == '   ') { //탭의 개수를 카운트
+                  count++;
+                  c = str.charAt(count);
+               }
+               if(count == level) { //위의 노드와 같은 레벨이면 add
+                  temp = MindMap.tree.add(temp, str.trim());
+                  temp.addMouseListener(new MyMouseListener());
+                  MindMap.MP.add(temp);
+               }
+               else if(count > level) { //위의 노드보다 높은 레벨(자식)이면 addChild
+                  temp = MindMap.tree.addChild(temp, str.trim());
+                  temp.addMouseListener(new MyMouseListener());
+                  MindMap.MP.add(temp);
+                  level++;
+               }
+               else if(count < level) { //위의 노드보다 낮은 레벨이면 
+                  while(count < level) { //현재 노드와 레벨이 같아질 때까지 올라가다가
+                     temp = temp.parent;
+                     level--;
+                  }
+                  temp = MindMap.tree.add(temp, str.trim()); //add
+                  temp.addMouseListener(new MyMouseListener());
+                  MindMap.MP.add(temp);
+               }
+            }
+            catch(NoSuchElementException ex) { //더이상 읽을 줄이 없으면 break
+               s.close();
+               break;
+            }
+         }
+      }
 }
 
+class MyMouseListener implements MouseListener, MouseMotionListener {
+   int xDiff, yDiff;
+    public void mousePressed(MouseEvent e) {
+       Node node = (Node)e.getSource();
+       node.X = e.getX();
+       node.Y = e.getY();
+    }
+    public void mouseClicked(MouseEvent e) {
+       Node node = (Node)e.getSource();
+       MindMap.tf1.setText(node.get());
+       MindMap.tf2.setText(String.valueOf(node.X));
+       MindMap.tf3.setText(String.valueOf(node.Y));
+       MindMap.tf4.setText(String.valueOf(node.W));
+       MindMap.tf5.setText(String.valueOf(node.H));  
+       MindMap.tf6.setText(node.color.substring(2));
+    }
+    public void mouseEntered(MouseEvent e) {}
+    public void mouseExited(MouseEvent e) {}
+    public void mouseReleased(MouseEvent e) {
+       Node node = (Node)e.getSource();
+       node.setLocation(e.getX() - node.X, e.getY() - node.Y);
+       node.repaint();
+    }
+    public void mouseDragged(MouseEvent e) {
+       Node node = (Node)e.getSource();
+       node.setLocation(e.getX() - node.X, e.getY() - node.Y);
+       node.X = e.getX() - node.X;
+       node.Y = e.getY() - node.Y;
+       node.repaint();
+    }
+    public void mouseMoved(MouseEvent e) {}
+ }
 class Attribute implements ActionListener { //속성 수정 "적용"버튼리스너
 
-	@Override
-	public void actionPerformed(ActionEvent e) {
-		Node node = MindMap.selectedNode;
-		node.X = Integer.parseInt(MindMap.tf2.getText());
-		node.Y = Integer.parseInt(MindMap.tf3.getText());
-		node.W = Integer.parseInt(MindMap.tf4.getText());
-		node.H = Integer.parseInt(MindMap.tf5.getText());
-		node.color = MindMap.tf6.getText();
-		node.setBounds(node.X, node.Y, node.W, node.H);
-		node.setBackground(new Color(Integer.parseInt(node.color, 16)));
-	}
-	
-}
+      @Override
+      public void actionPerformed(ActionEvent e) {
+         Node node = MindMap.selectedNode;
+         node.X = Integer.parseInt(MindMap.tf2.getText());
+         node.Y = Integer.parseInt(MindMap.tf3.getText());
+         node.W = Integer.parseInt(MindMap.tf4.getText());
+         node.H = Integer.parseInt(MindMap.tf5.getText());
+         node.color = MindMap.tf6.getText();
+         node.setBounds(node.X, node.Y, node.W, node.H);
+         node.setBackground(new Color(Integer.parseInt(node.color, 16)));
+      }
+      
+   }
